@@ -17,8 +17,12 @@ clock = pygame.time.Clock()
 if os.path.exists("assets/icon.png"):
     icon = pygame.image.load("assets/icon.png").convert_alpha()
     pygame.display.set_icon(icon)
+elif os.path.exists("assets/missing.png"):
+    icon = pygame.image.load("assets/missing.png")
+    pygame.display.set_icon(icon)
 else:
-    print("⚠️  Missing 'assets/icon.png' — using default icon.")
+    print("⚠️  Missing 'assets/icon.png' — using fallback icon.")
+
 
 
 #  Colors & Fonts
