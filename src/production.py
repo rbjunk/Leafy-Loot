@@ -18,7 +18,6 @@ class Plant:
             "name": self.name,
             "base_production": self.base_production,
             "attacked": self.attacked,
-            "quantity": self.quantity
         }
 
     # Restore a plant from saved JSON data
