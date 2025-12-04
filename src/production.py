@@ -27,5 +27,4 @@ class Plant:
             name=data["name"],
             base_production=data["base_production"],
             attacked=data["attacked"],
-            quantity=data["quantity"],
         )
