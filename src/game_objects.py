@@ -5,14 +5,15 @@ from utils import ASSETS_DIR, BUTTON_HOVER_COLOR, get_font, sound_manager, setti
 
 # Data class to hold plant info
 class PlantItem:
-    def __init__(self, name, base_cost, production, color, filename):
+    def __init__(self, name, base_cost, production, color, filename=None):
         self.name = name
         self.base_cost = base_cost
         self.cost = base_cost
         self.production = production
         self.color = color
-        self.filename = filename 
-        self.icon = None         
+        # Optional filename for an icon in assets/; may be None
+        self.filename = filename
+        self.icon = None
         self.count = 0
         self.buy_rect = None
 
@@ -49,13 +50,17 @@ class Shop:
         # Placeholder tree image for shop icons
         self.tree_image = load_image("missing.png", size=(60, 60))
 
-            #Loads a 60x60 icon for each plant item defined in plant_items
-    
-        def _load_shop_icons(self):
-            for item in self.plant_items:
-                # Use load_image with a fixed size for the shop icon
-                # If the file is missing, utils.load_image returns a fallback surface
-                item.icon = load_image(item.filename, size=(60, 60))
+        # Loads a 60x60 icon for each plant item defined in plant_items
+    def _load_shop_icons(self):
+        for item in self.plant_items:
+            # Only attempt to load if a filename was provided
+            if item.filename:
+                try:
+                    item.icon = load_image(item.filename, size=(60, 60))
+                except Exception:
+                    item.icon = None
+            else:
+                item.icon = None
 
     def toggle(self, is_upgrades=False):
         self.is_open = not self.is_open
