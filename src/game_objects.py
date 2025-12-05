@@ -24,6 +24,8 @@ class Shop:
         self.height = height
         self.is_open = False
         self.plant_cost = 10
+        self.improved_soil_cost = 100
+        self.owns_improved_soil = False
         self.is_upgrades_shop = False  # Differentiate between shop and upgrades
 
         # Define available plants 
