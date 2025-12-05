@@ -328,6 +328,35 @@ def create_overlay(color, alpha):
     return overlay
 
 
+# Generic image loader with optional size and alpha conversion
+def load_image(filename, size=None, convert_alpha=True):
+    path = os.path.join(ASSETS_DIR, filename)
+    if os.path.exists(path):
+        try:
+            image = pygame.image.load(path)
+            if convert_alpha:
+                try:
+                    image = image.convert_alpha()
+                except Exception:
+                    image = image.convert()
+            else:
+                image = image.convert()
+
+            if size:
+                image = pygame.transform.scale(image, size)
+
+            return image
+        except Exception as e:
+            print(f"Could not load image {filename}: {e}")
+
+    # Fallback surface when asset missing
+    print(f"Image not found: {path} - creating fallback surface")
+    fallback_size = size if size else (32, 32)
+    fallback = pygame.Surface(fallback_size, pygame.SRCALPHA)
+    fallback.fill((180, 180, 180, 255))
+    return fallback
+
+
 # Initialize managers (but don't load sounds yet - will be done in main.py after mixer init)
 sound_manager = SoundManager()
 music_manager = MusicManager()
