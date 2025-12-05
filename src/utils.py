@@ -150,6 +150,7 @@ class SaveManager:
             "season_timer": 0,
             "plants": 0,
             "plant_cost": 10,
+            "owns_improved_soil": False,
             "created_at": time.time(),
             "last_updated": time.time()
         }

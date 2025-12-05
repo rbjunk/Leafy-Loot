@@ -27,6 +27,7 @@ def main():
     sound_manager.load_sound("hover", "Option_Selection.wav")
     sound_manager.load_sound("select", "Item_Accept.wav")
     sound_manager.load_sound("back", "Item_Decline.wav")
+    sound_manager.load_sound("purchase", "upgrade_purchased.mp3")
 
     # Load separate music tracks
     music_manager.menu_music = music_manager.load_music("menu", "menu_music.mp3")

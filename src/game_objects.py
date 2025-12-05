@@ -100,6 +100,7 @@ class Shop:
                     improved_soil_name = upgrade_font.render("Improved Soil", True, (220, 220, 220))
                     improved_soil_desc = button_font.render("Improved production of all plants by 10%", True, (180, 180, 180))
                     improved_soil_cost_text = button_font.render(f"Cost: {self.improved_soil_cost} leafs", True, (200, 200, 100))
+                    improved_soil_bought_text = button_font.render(f"SOLD OUT", True, (250, 0, 30))
                     # Name: Centered horizontally, slightly down from the top
                     name_rect = improved_soil_name.get_rect(
                         midtop=(upgrade_description_area.centerx, upgrade_description_area.top + 15)
@@ -112,20 +113,21 @@ class Shop:
                     cost_rect = improved_soil_cost_text.get_rect(
                         midbottom=(upgrade_description_area.centerx, upgrade_description_area.bottom - 15)
                     )
+                    # Bought: Centered horizontally, slightly up from the bottom
+                    bought_rect = improved_soil_bought_text.get_rect(
+                        midbottom=(upgrade_description_area.centerx, upgrade_description_area.bottom - 15)
+                    )
                     # 4. Draw text
                     screen.blit(improved_soil_name, name_rect)
                     screen.blit(improved_soil_desc, desc_rect)
-                    screen.blit(improved_soil_cost_text, cost_rect)
+                    if self.owns_improved_soil:
+                        screen.blit(improved_soil_bought_text, bought_rect)
+                    else:
+                        screen.blit(improved_soil_cost_text, cost_rect)
                     #Check for mouse clicks
                     if pygame.mouse.get_pressed()[0] and self.owns_improved_soil == False:
                         if leafs >= self.improved_soil_cost:
-                            sound_manager.play("select", settings.sfx_volume * 0.7)
-                            leafs -= self.improved_soil_cost
-                            #Change to now owned
-                            self.owns_improved_soil = True
-                            print(f"Purchased an upgrade: Improved Soil")
-
-
+                            self.handle_upgrade_purchase("Improved Soil", leafs)
 
             else:
                 # Plant shop
@@ -233,6 +235,15 @@ class Shop:
             close_rect_text = close_text.get_rect(center=close_rect.center)
             screen.blit(close_text, close_rect_text)
 
+    def handle_upgrade_purchase(self, upgrade_bought, leafs):
+        sound_manager.play("purchase", settings.sfx_volume * 0.7)
+        if upgrade_bought == "Improved Soil":
+            leafs -= self.improved_soil_cost
+            #Change to now owned
+            self.owns_improved_soil = True
+            print(f"Purchased an upgrade: Improved Soil")
+
+
     def check_hover(self, pos):
         was_close_hovered = self.close_button_hovered
         was_buy_hovered = self.buy_button_hovered
@@ -317,10 +328,10 @@ class GameManager:
                 self.production_multiplier = 1.0
             else:  # Winter
                 self.production_multiplier = 0.7
-
+        self.global_upgrade_multiplier = 1
         # Calculate leaf production (base + 1 per plant)
         total_production_rate = self.base_production_rate + self.plants
-        effective_rate = total_production_rate * self.production_multiplier
+        effective_rate = total_production_rate * self.production_multiplier * self.global_upgrade_multiplier
         self.leafs += effective_rate * delta_time
 
     def add_plant(self):
