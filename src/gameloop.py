@@ -233,6 +233,7 @@ class GameLoop:
                     self.game_manager.leafs = save_data["leafs"]
                     self.game_manager.plants = save_data.get("plants", 0)
                     self.shop.plant_cost = save_data.get("plant_cost", 10)
+                    self.shop.owns_improved_soil = save_data.get("owns_improved_soil", False)
                     # Load season data
                     self.game_manager.season = save_data.get("season", "Spring")
                     self.game_manager.season_index = save_data.get("season_index", 0)
@@ -251,6 +252,7 @@ class GameLoop:
                     self.game_manager.season_timer = save_data.get("season_timer", 0)
                     self.game_manager.plants = save_data.get("plants", 0)
                     self.shop.plant_cost = save_data.get("plant_cost", 10)
+                    self.shop.owns_improved_soil = save_data.get("owns_improved_soil", False)
                     self.game_state = 'game'
                     # Switch to game music
                     if music_manager.game_music:
@@ -335,7 +337,8 @@ class GameLoop:
                         "season_index": self.game_manager.season_index,
                         "season_timer": self.game_manager.season_timer,
                         "plants": self.game_manager.plants,
-                        "plant_cost": self.shop.plant_cost
+                        "plant_cost": self.shop.plant_cost,
+                        "owns_improved_soil": self.shop.owns_improved_soil
                     }
                     save_manager.save_game(save_data)
                     self.game_state = 'main_menu'
@@ -420,7 +423,8 @@ class GameLoop:
                             "season_index": self.game_manager.season_index,
                             "season_timer": self.game_manager.season_timer,
                             "plants": self.game_manager.plants,
-                            "plant_cost": self.shop.plant_cost
+                            "plant_cost": self.shop.plant_cost,
+                            "owns_improved_soil": self.shop.owns_improved_soil
                         }
                         save_manager.save_game(save_data)
                     settings.save_settings()
@@ -510,7 +514,8 @@ class GameLoop:
                         "season_index": self.game_manager.season_index,
                         "season_timer": self.game_manager.season_timer,
                         "plants": self.game_manager.plants,
-                        "plant_cost": self.shop.plant_cost
+                        "plant_cost": self.shop.plant_cost,
+                        "owns_improved_soil": self.shop.owns_improved_soil
                     }
                     save_manager.save_game(save_data)
 
