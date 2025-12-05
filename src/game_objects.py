@@ -11,6 +11,8 @@ class Shop:
         self.height = height
         self.is_open = False
         self.plant_cost = 10
+        self.improved_soil_cost = 100
+        self.owns_improved_soil = False
         self.is_upgrades_shop = False  # Differentiate between shop and upgrades
 
         # Store button rects for click handling
@@ -45,17 +47,86 @@ class Shop:
             button_font = get_font(24)
 
             if self.is_upgrades_shop:
-                # Upgrades shop - Coming Soon
-                coming_font = get_font(36)
-                coming_text = coming_font.render("COMING SOON!", True, (220, 220, 100))
-                coming_rect = coming_text.get_rect(center=(shop_rect.centerx, shop_rect.centery))
-                screen.blit(coming_text, coming_rect)
+                mouse_pos = pygame.mouse.get_pos()
+                # Draw available leafs
+                leaf_font = get_font(32)
+                leaf_text = leaf_font.render(f"Available Leafs: {leafs}", True, (144, 238, 144))
+                leaf_rect = leaf_text.get_rect(center=(shop_rect.centerx, shop_rect.top + 80))
+                screen.blit(leaf_text, leaf_rect)
 
-                # Description
-                desc_font = get_font(24)
-                desc_text = desc_font.render("Upgrades will be available in the next update", True, (180, 180, 180))
-                desc_rect = desc_text.get_rect(center=(shop_rect.centerx, shop_rect.centery + 50))
-                screen.blit(desc_text, desc_rect)
+                # Draw plant info
+                upgrade_font = get_font(28)
+                upgrade_description_area = pygame.Rect(
+                    shop_rect.left + 10,
+                    shop_rect.top + 280,
+                    shop_rect.width - 20,
+                    140
+                )
+
+                #Try to load improved soil image
+                imrpoved_soil_image = None
+                improved_soil_image_path = os.path.join(ASSETS_DIR, "improved_soil.png")
+                if os.path.exists(improved_soil_image_path):
+                    try:
+                        improved_soil_image = pygame.image.load(improved_soil_image_path).convert_alpha()
+                        # Scale if needed
+                        max_size = 120
+                        if improved_soil_image.get_width() > max_size or improved_soil_image.get_height() > max_size:
+                            scale = max_size / max(improved_soil_image.get_width(), improved_soil_image.get_height())
+                            new_width = int(improved_soil_image.get_width() * scale)
+                            new_height = int(improved_soil_image.get_height() * scale)
+                            improved_soil_image = pygame.transform.scale(improved_soil_image, (new_width, new_height))
+                    except:
+                        improved_soil_image = None
+                # improved soil image/icon area
+                improved_soil_area = pygame.Rect(
+                    shop_rect.left + 10,
+                    shop_rect.top + 120,
+                    shop_rect.width / 4,
+                    150
+                )
+                pygame.draw.rect(screen, (50, 70, 50), improved_soil_area, border_radius=10)
+                pygame.draw.rect(screen, (100, 150, 100), improved_soil_area, 2, border_radius=10)
+
+                if improved_soil_image:
+                    improved_soil_rect = improved_soil_image.get_rect(center=improved_soil_area.center)
+                    screen.blit(improved_soil_image, improved_soil_rect)
+
+                is_hovering_improved_soil = improved_soil_area.collidepoint(mouse_pos)
+                if is_hovering_improved_soil:
+                    pygame.draw.rect(screen, (50, 70, 50), upgrade_description_area, border_radius=10)
+                    pygame.draw.rect(screen, (100, 150, 100), upgrade_description_area, 2, border_radius=10)
+                    # upgrade name and description
+                    improved_soil_name = upgrade_font.render("Improved Soil", True, (220, 220, 220))
+                    improved_soil_desc = button_font.render("Improved production of all plants by 10%", True, (180, 180, 180))
+                    improved_soil_cost_text = button_font.render(f"Cost: {self.improved_soil_cost} leafs", True, (200, 200, 100))
+                    # Name: Centered horizontally, slightly down from the top
+                    name_rect = improved_soil_name.get_rect(
+                        midtop=(upgrade_description_area.centerx, upgrade_description_area.top + 15)
+                    )
+                    # Description: Dead center of the box
+                    desc_rect = improved_soil_desc.get_rect(
+                        center=upgrade_description_area.center
+                    )
+                    # Cost: Centered horizontally, slightly up from the bottom
+                    cost_rect = improved_soil_cost_text.get_rect(
+                        midbottom=(upgrade_description_area.centerx, upgrade_description_area.bottom - 15)
+                    )
+                    # 4. Draw text
+                    screen.blit(improved_soil_name, name_rect)
+                    screen.blit(improved_soil_desc, desc_rect)
+                    screen.blit(improved_soil_cost_text, cost_rect)
+                    #Check for mouse clicks
+                    if pygame.mouse.get_pressed()[0] and self.owns_improved_soil == False:
+                        if leafs >= self.improved_soil_cost:
+                            sound_manager.play("select", settings.sfx_volume * 0.7)
+                            leafs -= self.improved_soil_cost
+                            #Change to now owned
+                            self.owns_improved_soil = True
+                            print(f"Purchased an upgrade: Improved Soil")
+
+
+
             else:
                 # Plant shop
                 # Draw available leafs
@@ -211,7 +282,7 @@ class GameManager:
         self.season_index = 0  # This should already exist
         self.season_timer = 0  # This should already exist
         self.season_duration = 20 * 60  # 20 minutes in seconds
-        self.base_production_rate = 1  # base leaves per second
+        self.base_production_rate = 10  # base leaves per second
         self.plants = 0  # number of plants purchased
         self.production_multiplier = 1.0
         self.plant_image = None
