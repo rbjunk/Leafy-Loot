@@ -326,6 +326,27 @@ def create_overlay(color, alpha):
     overlay.fill((*color, alpha))
     return overlay
 
+# Generic image loader with optional size and alpha conversion
+def load_image(filename, size=None, convert_alpha=True):
+    path = os.path.join(ASSETS_DIR, filename)
+    if os.path.exists(path):
+        try:
+            image = pygame.image.load(path)
+            if convert_alpha:
+                try:
+                    image = image.convert_alpha()
+                except Exception:
+                    image = image.convert()
+            else:
+                image = image.convert()
+
+            if size:
+                image = pygame.transform.scale(image, size)
+
+            return image
+        except Exception as e:
+            print(f"Could not load image {filename}: {e}")
+
 
 # Initialize managers (but don't load sounds yet - will be done in main.py after mixer init)
 sound_manager = SoundManager()
