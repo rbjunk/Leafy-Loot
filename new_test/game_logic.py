@@ -74,7 +74,7 @@ class GameManager:
         self.leafs += total_rate * dt
 
     def get_stats(self):
-        multiplier = {"Spring": 1.2, "Summer": 1.5, "Fall": 1.0, "Winter": 0.7}.get(self.season, 1.0)
+        multiplier = {"Spring": 1.3, "Summer": 1.1, "Fall": 1.0, "Winter": 0.7}.get(self.season, 1.0)
         base_rate = (self.base_prod + self.plants + self.upgrade_rate_bonus)
         rate = base_rate * multiplier * self.production_multiplier
 
