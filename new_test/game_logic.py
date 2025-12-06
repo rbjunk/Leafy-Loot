@@ -106,22 +106,43 @@ class Shop:
         self.close_rect = None
         self.close_hovered = False
 
+
         self.shop_items = [
-            {"id": "buy_plant", "name": "Maple Sapling", "cost": 10, "desc": "+.5 Leaf/sec", "rate_boost": 0.5,
-             "cost_mult": 1.3},
-            {"id": "rate_10min", "name": "Pine Tree", "cost": 100, "desc": "+1 Leafs/sec", "rate_boost": 1,
-             "cost_mult": 2.},
-            {"id": "rate_50min", "name": "Large Oak", "cost": 300, "desc": "+2 Leafs/sec", "rate_boost": 2,
-             "cost_mult": 2.7}
+            # TIER 1: Starter
+            {"id": "maple_sapling", "name": "Maple Sapling", "cost": 10, "desc": "+0.5 Leaf/sec", "rate_boost": 0.5, "cost_mult": 1.3, "count": 0},
+            
+            # TIER 2: Established
+            {"id": "oak_tree", "name": "Oak Tree", "cost": 150, "desc": "+4 Leaf/sec", "rate_boost": 4.0, "cost_mult": 1.3, "count": 0},
+            
+            # TIER 3: Big Producer
+            {"id": "willow_tree", "name": "Weeping Willow", "cost": 1000, "desc": "+25 Leaf/sec", "rate_boost": 25.0, "cost_mult": 1.3, "count": 0},
+            
+            # TIER 4: Exotic
+            {"id": "ginkgo_tree", "name": "Ginkgo Tree", "cost": 7500, "desc": "+100 Leaf/sec", "rate_boost": 100.0, "cost_mult": 1.4, "count": 0},
+            
+            # TIER 5: Fantasy
+            {"id": "ancient_banyan", "name": "Ancient Banyan", "cost": 50000, "desc": "+500 Leaf/sec", "rate_boost": 500.0, "cost_mult": 1.5, "count": 0},
+            
+            # TIER 6: End Game
+            {"id": "crystal_tree", "name": "Crystal Tree", "cost": 500000, "desc": "+5000 Leaf/sec", "rate_boost": 5000.0, "cost_mult": 1.6, "count": 0}
         ]
 
+
         self.upgrade_items = [
-            {"id": "rate_10min", "name": "Fertilizer", "cost": 100, "desc": "Increases leaf Output By 10%", "multiplier_value": 1.1,
-             "purchased": False},
-            {"id": "rate_50min", "name": "Sprinkler", "cost": 500, "desc": "Increases leaf Output By 25%", "multiplier_value": 1.25,
-             "purchased": False},
-            {"id": "multiplier_x2", "name": "Super-Fertilizer", "cost": 1000, "desc": "Doubles Leaf Output (x2)",
-             "multiplier_value": 2.0, "purchased": False},
+            # TIER 1
+            {"id": "rate_10%", "name": "Fertilizer", "cost": 100, "desc": "Output +10%", "multiplier_value": 1.1, "purchased": False},
+            
+            # TIER 2
+            {"id": "rate_20%", "name": "Rich Compost", "cost": 500, "desc": "Output +20%", "multiplier_value": 1.2, "purchased": False},
+            
+            # TIER 3
+            {"id": "rate_30%", "name": "River Divert", "cost": 2500, "desc": "Output +30%", "multiplier_value": 1.3, "purchased": False},
+            
+            # TIER 4
+            {"id": "rate_50%", "name": "Magic Pollen", "cost": 15000, "desc": "Output +50%", "multiplier_value": 1.5, "purchased": False},
+            
+            # TIER 5
+            {"id": "rate_100%", "name": "Gaia's Bless", "cost": 250000, "desc": "Output x2", "multiplier_value": 2.0, "purchased": False}
         ]
 
     # FIX 1: Methods to extract and restore shop data
@@ -156,7 +177,19 @@ class Shop:
         # Fallback legacy logic if needed, but load_state is preferred
         pass
 
-    def draw(self, screen, width, height, leafs):
+    def get_max_scroll(self, width, height):
+        """Return maximum scroll offset for the current list given modal size."""
+        # Modal height is 500 in draw
+        modal_h = 500
+        item_h = 80
+        spacing = 10
+        current_list = self.upgrade_items if self.is_upgrades else self.shop_items
+        content_h = len(current_list) * (item_h + spacing)
+        visible_h = modal_h - 150  # leave room for title/close padding
+        max_scroll = max(0, content_h - visible_h)
+        return max_scroll
+
+    def draw(self, screen, width, height, leafs, scroll_offset=0):
         if not self.is_open: return
 
         # Dim background
@@ -179,11 +212,20 @@ class Shop:
         btn_font = pygame.font.Font(None, 32)
         desc_font = pygame.font.Font(None, 24)
 
+        # Clip drawing to the modal content area so items outside modal are not visible
+        modal_h = self.rect.height
+        visible_h = modal_h - 150  # leave room for title/close padding
+        clip_rect = pygame.Rect(self.rect.left + 50, self.rect.top + 100, self.rect.width - 100, visible_h)
+        prev_clip = screen.get_clip()
+        screen.set_clip(clip_rect)
+
         for i, item in enumerate(current_list):
             item_h = 80
             item_y = item_start_y + (i * (item_h + 10))
             item_rect = pygame.Rect(self.rect.left + 50, item_y, self.rect.width - 100, item_h)
-            item["rect"] = item_rect
+            # Move rect by scroll_offset for screen coordinates (positive scroll_offset scrolls down)
+            offset_rect = item_rect.move(0, -scroll_offset)
+            item["rect"] = offset_rect
 
             is_bought = item.get("purchased", False) and item.get("multiplier_value")
             can_afford = leafs >= item["cost"]
@@ -194,18 +236,22 @@ class Shop:
                 base_col = (70, 130, 70) if can_afford else (80, 80, 80)
                 if item.get("hovered"): base_col = (100, 160, 100) if can_afford else (100, 100, 100)
 
-            pygame.draw.rect(screen, base_col, item_rect, border_radius=8)
-            pygame.draw.rect(screen, (200, 200, 200), item_rect, 2, border_radius=8)
+            pygame.draw.rect(screen, base_col, offset_rect, border_radius=8)
+            pygame.draw.rect(screen, (200, 200, 200), offset_rect, 2, border_radius=8)
 
             if is_bought:
                 name_txt = btn_font.render(f"{item['name']} - OWNED", True, (150, 150, 150))
             else:
                 name_txt = btn_font.render(f"{item['name']} - {item['cost']} Leafs", True, (255, 255, 255))
 
-            screen.blit(name_txt, (item_rect.x + 20, item_rect.y + 15))
+            screen.blit(name_txt, (offset_rect.x + 20, offset_rect.y + 15))
             desc_txt = desc_font.render(item['desc'], True, (200, 200, 200))
-            screen.blit(desc_txt, (item_rect.x + 20, item_rect.y + 45))
+            screen.blit(desc_txt, (offset_rect.x + 20, offset_rect.y + 45))
 
+        # Restore previous clip so UI chrome (close button, title, borders) draws normally
+        screen.set_clip(prev_clip)
+
+        # Close button stays fixed relative to the modal (not scrolled)
         self.close_rect = pygame.Rect(0, 0, 100, 40)
         self.close_rect.topleft = (self.rect.left + 20, self.rect.top + 20)
         close_col = (200, 80, 80) if self.close_hovered else (180, 70, 70)
