@@ -1,6 +1,6 @@
 import pygame
 import os
-from .settings import *
+from settings import *
 
 
 class GameManager:
@@ -117,7 +117,11 @@ class Shop:
 
         self.upgrade_items = [
             {"id": "multiplier_x2", "name": "Super-Fertilizer", "cost": 500, "desc": "Doubles Leaf Output (x2)",
-             "multiplier_value": 2.0, "cost_mult": 10.0, "purchased": False}
+             "multiplier_value": 2.0, "cost_mult": 10.0, "purchased": False},
+            {"id": "multiplier_x3", "name": "Plant Mulch", "cost": 5000, "desc": "Triples Leaf Output (x3)",
+             "multiplier_value": 3.0, "cost_mult": 10.0, "purchased": False},
+            {"id": "multiplier_x5", "name": "Aquatic Water", "cost": 50000, "desc": "Quintuples Leaf Output (x3)",
+             "multiplier_value": 5.0, "cost_mult": 10.0, "purchased": False}
         ]
 
     # FIX 1: Methods to extract and restore shop data
@@ -144,7 +148,7 @@ class Shop:
             if item["id"] in saved_upgrades:
                 item["purchased"] = saved_upgrades[item["id"]]
 
-    def toggle(self, is_upgrades=False):
+    def toggle(self, is_upgrades=False): 
         self.is_open = True
         self.is_upgrades = is_upgrades
 

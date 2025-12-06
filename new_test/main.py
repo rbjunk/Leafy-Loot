@@ -2,10 +2,10 @@ import pygame
 import sys
 import math
 import os
-from new_test.settings import *
-from new_test.managers import SoundManager, MusicManager, SaveManager, SettingsManager
-from new_test.game_logic import GameManager, Shop
-from new_test.ui import Button, Slider
+from settings import *
+from managers import SoundManager, MusicManager, SaveManager, SettingsManager
+from game_logic import GameManager, Shop
+from ui import Button, Slider
 
 
 class Game:

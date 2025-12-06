@@ -9,7 +9,7 @@
             "name": "Debug Project",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/main.py",
+            "program": "${workspaceFolder}/new_test/main.py",
             "console": "integratedTerminal",
             "justMyCode": false
         }

@@ -2,7 +2,7 @@ import pygame
 import os
 import json
 import time
-from .settings import ASSETS_DIR, SETTINGS_FILE, SAVE_FILE
+from settings import ASSETS_DIR, SETTINGS_FILE, SAVE_FILE
 
 
 class SettingsManager:
