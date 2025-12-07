@@ -51,6 +51,7 @@ class Game:
         # Game Objects
         self.game_mgr = None
         self.shop = None
+        self.shop_scroll = 0
 
         # State Management
         self.state = "PRESCREEN"
@@ -145,8 +146,23 @@ class Game:
                                 self.music_mgr.play_music("menu_music.mp3")
                             elif action == "game_shop":
                                 self.shop.toggle(is_upgrades=False)
+                                self.shop_scroll = 0
                             elif action == "game_upgrades":
                                 self.shop.toggle(is_upgrades=True)
+                                self.shop_scroll = 0
+
+            # Mouse wheel for scrolling shop menus (pygame.MOUSEWHEEL)
+            if event.type == pygame.MOUSEWHEEL:
+                if self.state == "GAME" and self.shop and self.shop.is_open:
+                    # Positive event.y => wheel up; decrease scroll offset
+                    scroll_step = 40
+                    self.shop_scroll -= event.y * scroll_step
+                    # Clamp
+                    max_scroll = self.shop.get_max_scroll(WIDTH, HEIGHT)
+                    if self.shop_scroll < 0:
+                        self.shop_scroll = 0
+                    if self.shop_scroll > max_scroll:
+                        self.shop_scroll = max_scroll
 
         # --- SLIDER DRAGGING ---
         if self.state == "SETTINGS":
@@ -277,7 +293,7 @@ class Game:
             self.screen.blit(s_surf, (0, HEIGHT // 2 - 50))
 
         # Shop Overlay
-        self.shop.draw(self.screen, WIDTH, HEIGHT, self.game_mgr.leafs)
+        self.shop.draw(self.screen, WIDTH, HEIGHT, self.game_mgr.leafs, self.shop_scroll)
 
     def draw_plants(self):
         for i, item_id in enumerate(self.game_mgr.plant_grid[:100]):
