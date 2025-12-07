@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from settings import BUTTON_COLOR, BUTTON_HOVER_COLOR, BUTTON_TEXT_COLOR, SLIDER_BG_COLOR, SLIDER_COLOR, SLIDER_HANDLE_COLOR
 
 
 class Button:
@@ -14,27 +14,35 @@ class Button:
         self.font = pygame.font.Font(None, font_size)
 
     def draw(self, surface):
+        self.draw_with_offset(surface, 0)
+
+    def draw_with_offset(self, surface, y_offset=0):
+        # Draw the button shifted upwards by y_offset (positive y_offset scrolls down)
+        offset_rect = self.rect.move(0, -y_offset)
         color = BUTTON_HOVER_COLOR if self.hovered else BUTTON_COLOR
         border_radius = 10 if self.rect.height > 40 else 6
 
-        pygame.draw.rect(surface, color, self.rect, border_radius=border_radius)
-        pygame.draw.rect(surface, (200, 200, 200), self.rect, 2, border_radius=border_radius)
+        pygame.draw.rect(surface, color, offset_rect, border_radius=border_radius)
+        pygame.draw.rect(surface, (200, 200, 200), offset_rect, 2, border_radius=border_radius)
 
         text_surf = self.font.render(self.text, True, BUTTON_TEXT_COLOR)
-        text_rect = text_surf.get_rect(center=self.rect.center)
+        text_rect = text_surf.get_rect(center=offset_rect.center)
         surface.blit(text_surf, text_rect)
 
-    def update(self, mouse_pos, sound_mgr):
-        # Returns True if sound should be played
+    def update(self, mouse_pos, sound_mgr, y_offset=0):
+        # Returns True if sound should be played. mouse_pos is screen coords.
         self.was_hovered = self.hovered
-        self.hovered = self.rect.collidepoint(mouse_pos)
+        offset_rect = self.rect.move(0, -y_offset)
+        self.hovered = offset_rect.collidepoint(mouse_pos)
 
         # Play hover sound only on the frame we enter the rect
         if self.hovered and not self.was_hovered:
             sound_mgr.play("hover")
 
-    def handle_click(self, sound_mgr):
-        if self.hovered:
+    def handle_click(self, sound_mgr, y_offset=0):
+        # Use the offset rect for click detection
+        offset_rect = self.rect.move(0, -y_offset)
+        if offset_rect.collidepoint(pygame.mouse.get_pos()):
             sound_type = "back" if self.is_back else "select"
             sound_mgr.play(sound_type)
             return self.action_id

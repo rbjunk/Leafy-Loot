@@ -1,8 +1,7 @@
 import pygame
 import sys
-import math
 import os
-from settings import *
+from settings import WIDTH, HEIGHT, FPS, BG_COLOR, TEXT_COLOR, GAME_UI_BG, PLANTING_AREA_COLOR, ASSETS_DIR
 from managers import SoundManager, MusicManager, SaveManager, SettingsManager
 from game_logic import GameManager, Shop
 from ui import Button, Slider
@@ -52,6 +51,9 @@ class Game:
         # Game Objects
         self.game_mgr = None
         self.shop = None
+        self.shop_scroll = 0
+        self.shop_scroll_dragging = False
+        self.shop_scroll_drag_offset = 0
 
         # State Management
         self.state = "PRESCREEN"
@@ -98,56 +100,106 @@ class Game:
 
             # --- MOUSE CLICKS ---
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.state == "MENU":
-                    for btn in self.menu_buttons:
-                        action = btn.handle_click(self.sound_mgr)
-                        if action == "new_game":
-                            self.start_game(new=True)
-                        elif action == "load_game":
-                            self.start_game(new=False)
-                        elif action == "settings":
-                            self.prev_state = "MENU"
-                            self.state = "SETTINGS"
-                        elif action == "exit":
-                            self.quit_game()
-
-                elif self.state == "SETTINGS":
-                    action = self.settings_back_btn.handle_click(self.sound_mgr)
-                    if action == "back":
-                        self.settings_mgr.save()
-                        self.state = self.prev_state
-
-                elif self.state == "GAME":
-                    if self.shop.is_open:
-                        result = self.shop.handle_click(mouse_pos, self.game_mgr.leafs, self.sound_mgr)
-                        self.game_mgr.leafs, bought_plant, rate_boost, item_id, mult_value = result
-
-                        # Apply multiplier if one was purchased
-                        if mult_value > 1.0:
-                            self.game_mgr.production_multiplier *= mult_value
-
-                        # Logic for ALL grid items (Plants, Fertilizer, Sprinklers)
-                        if item_id and rate_boost >= 0 and bought_plant:
-                            # FIX 2: Use insert(0) to add to Top Left (Newest first)
-                            self.game_mgr.plant_grid.insert(0, item_id)
-                            self.game_mgr.upgrade_rate_bonus += rate_boost
-                        elif item_id and rate_boost > 0 and not bought_plant:
-                            # Items like fertilizer that add to grid but aren't "buy_plant" ID
-                            self.game_mgr.plant_grid.insert(0, item_id)
-                            self.game_mgr.upgrade_rate_bonus += rate_boost
-
-                    else:
-                        for btn in self.game_buttons:
+                # Only treat left-click (1) as selection/click. Wheel/middle buttons are handled separately.
+                if event.button == 1:
+                    if self.state == "MENU":
+                        for btn in self.menu_buttons:
                             action = btn.handle_click(self.sound_mgr)
-                            if action == "game_menu":
-                                # FIX 1: Save shop state
-                                self.save_mgr.save_game(self.game_mgr.get_save_data(self.shop))
-                                self.state = "MENU"
-                                self.music_mgr.play_music("menu_music.mp3")
-                            elif action == "game_shop":
-                                self.shop.toggle(is_upgrades=False)
-                            elif action == "game_upgrades":
-                                self.shop.toggle(is_upgrades=True)
+                            if action == "new_game":
+                                self.start_game(new=True)
+                            elif action == "load_game":
+                                self.start_game(new=False)
+                            elif action == "settings":
+                                self.prev_state = "MENU"
+                                self.state = "SETTINGS"
+                            elif action == "exit":
+                                self.quit_game()
+
+                    elif self.state == "SETTINGS":
+                        action = self.settings_back_btn.handle_click(self.sound_mgr)
+                        if action == "back":
+                            self.settings_mgr.save()
+                            self.state = self.prev_state
+
+                    elif self.state == "GAME":
+                        if self.shop.is_open:
+                            # Check if the user clicked the scrollbar thumb/track first
+                            track_rect, thumb_rect, max_scroll = self.shop.get_scrollbar_info(WIDTH, HEIGHT, self.shop_scroll)
+                            if thumb_rect and thumb_rect.collidepoint(mouse_pos):
+                                # Start dragging the thumb
+                                self.shop_scroll_dragging = True
+                                self.shop_scroll_drag_offset = mouse_pos[1] - thumb_rect.top
+                            elif track_rect and track_rect.collidepoint(mouse_pos) and thumb_rect:
+                                # Clicked the track -> jump the thumb to that position
+                                thumb_h = thumb_rect.height
+                                track_space = track_rect.height - thumb_h
+                                new_thumb_top = max(track_rect.top, min(track_rect.bottom - thumb_h, mouse_pos[1] - thumb_h // 2))
+                                proportion = (new_thumb_top - track_rect.top) / track_space if track_space > 0 else 0
+                                self.shop_scroll = proportion * max_scroll
+                            else:
+                                # Otherwise treat as shop item click
+                                result = self.shop.handle_click(mouse_pos, self.game_mgr.leafs, self.sound_mgr)
+                                self.game_mgr.leafs, bought_plant, rate_boost, item_id, mult_value = result
+
+                                # Apply multiplier if one was purchased
+                                if mult_value > 1.0:
+                                    self.game_mgr.production_multiplier *= mult_value
+
+                                # Logic for ALL grid items (Plants, Fertilizer, Sprinklers)
+                                if item_id and rate_boost >= 0 and bought_plant:
+                                    # FIX 2: Use insert(0) to add to Top Left (Newest first)
+                                    self.game_mgr.plant_grid.insert(0, item_id)
+                                    self.game_mgr.upgrade_rate_bonus += rate_boost
+                                elif item_id and rate_boost > 0 and not bought_plant:
+                                    # Items like fertilizer that add to grid but aren't "buy_plant" ID
+                                    self.game_mgr.plant_grid.insert(0, item_id)
+                                    self.game_mgr.upgrade_rate_bonus += rate_boost
+
+                        else:
+                            for btn in self.game_buttons:
+                                action = btn.handle_click(self.sound_mgr)
+                                if action == "game_menu":
+                                    # FIX 1: Save shop state
+                                    self.save_mgr.save_game(self.game_mgr.get_save_data(self.shop))
+                                    self.state = "MENU"
+                                    self.music_mgr.play_music("menu_music.mp3")
+                                elif action == "game_shop":
+                                    self.shop.toggle(is_upgrades=False)
+                                    self.shop_scroll = 0
+                                elif action == "game_upgrades":
+                                    self.shop.toggle(is_upgrades=True)
+                                    self.shop_scroll = 0
+
+                # Mouse motion: if dragging the shop thumb, update scroll
+            if event.type == pygame.MOUSEMOTION:
+                if getattr(self, 'shop_scroll_dragging', False) and self.shop and self.shop.is_open:
+                    track_rect, thumb_rect, max_scroll = self.shop.get_scrollbar_info(WIDTH, HEIGHT, self.shop_scroll)
+                    if thumb_rect:
+                        thumb_h = thumb_rect.height
+                        track_space = track_rect.height - thumb_h
+                        new_thumb_top = mouse_pos[1] - self.shop_scroll_drag_offset
+                        new_thumb_top = max(track_rect.top, min(track_rect.bottom - thumb_h, new_thumb_top))
+                        proportion = (new_thumb_top - track_rect.top) / track_space if track_space > 0 else 0
+                        self.shop_scroll = proportion * max_scroll
+
+                # Mouse button up: stop dragging
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    if getattr(self, 'shop_scroll_dragging', False):
+                        self.shop_scroll_dragging = False
+
+            # Mouse wheel for scrolling shop menus (pygame.MOUSEWHEEL)
+            if event.type == pygame.MOUSEWHEEL:
+                if self.state == "GAME" and self.shop and self.shop.is_open:
+                    # Positive event.y => wheel up; decrease scroll offset
+                    scroll_step = 40
+                    self.shop_scroll -= event.y * scroll_step
+                    # Clamp
+                    max_scroll = self.shop.get_max_scroll(WIDTH, HEIGHT)
+                    if self.shop_scroll < 0:
+                        self.shop_scroll = 0
+                    if self.shop_scroll > max_scroll:
+                        self.shop_scroll = max_scroll
 
         # --- SLIDER DRAGGING ---
         if self.state == "SETTINGS":
@@ -278,7 +330,7 @@ class Game:
             self.screen.blit(s_surf, (0, HEIGHT // 2 - 50))
 
         # Shop Overlay
-        self.shop.draw(self.screen, WIDTH, HEIGHT, self.game_mgr.leafs)
+        self.shop.draw(self.screen, WIDTH, HEIGHT, self.game_mgr.leafs, self.shop_scroll)
 
     def draw_plants(self):
         for i, item_id in enumerate(self.game_mgr.plant_grid[:100]):
@@ -288,11 +340,17 @@ class Game:
             if img:
                 self.screen.blit(img, (x, y))
             else:
-                color = (100, 200, 100)
-                if item_id == "rate_10min":
-                    color = (150, 150, 100)
-                elif item_id == "rate_50min":
-                    color = (100, 100, 200)
+                # Map specific item IDs to colors for distinct visuals
+                COLOR_MAP = {
+                    "maple_sapling": (120, 180, 120),   # Medium light green
+                    "oak_tree": (80, 150, 80),          # Forest green
+                    "willow_tree": (150, 220, 150),     # Pale green, 
+                    "ginkgo_tree": (180, 180, 80),      # Yellow-green, 
+                    "ancient_banyan": (50, 130, 50),    # Dark green,
+                    "crystal_tree": (100, 100, 255),    # Blue/Crystal-like, 
+                }
+                
+                color = COLOR_MAP.get(item_id, (100, 200, 100))
                 pygame.draw.circle(self.screen, color, (x + 20, y + 20), 15)
 
     def start_game(self, new=False):
