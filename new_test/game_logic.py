@@ -149,10 +149,10 @@ class Shop:
             {"id": "rate_10%", "name": "Fertilizer", "cost": 100, "desc": "Output +10%", "multiplier_value": 1.1, "purchased": False},
             
             # TIER 2
-            {"id": "rate_20%", "name": "Rich Compost", "cost": 500, "desc": "Output +20%", "multiplier_value": 1.2, "purchased": False},
+            {"id": "rate_20%", "name": "Sprinkler", "cost": 500, "desc": "Output +20%", "multiplier_value": 1.2, "purchased": False},
             
             # TIER 3
-            {"id": "rate_30%", "name": "River Divert", "cost": 2500, "desc": "Output +30%", "multiplier_value": 1.3, "purchased": False},
+            {"id": "rate_30%", "name": "Rich Compost", "cost": 2500, "desc": "Output +30%", "multiplier_value": 1.3, "purchased": False},
             
             # TIER 4
             {"id": "rate_50%", "name": "Magic Pollen", "cost": 15000, "desc": "Output +50%", "multiplier_value": 1.5, "purchased": False},
