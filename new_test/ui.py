@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from settings import BUTTON_COLOR, BUTTON_HOVER_COLOR, BUTTON_TEXT_COLOR, SLIDER_BG_COLOR, SLIDER_COLOR, SLIDER_HANDLE_COLOR
 
 
 class Button:

@@ -1,8 +1,7 @@
 import pygame
 import sys
-import math
 import os
-from settings import *
+from settings import WIDTH, HEIGHT, FPS, BG_COLOR, TEXT_COLOR, GAME_UI_BG, PLANTING_AREA_COLOR, ASSETS_DIR
 from managers import SoundManager, MusicManager, SaveManager, SettingsManager
 from game_logic import GameManager, Shop
 from ui import Button, Slider

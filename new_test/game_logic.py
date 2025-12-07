@@ -107,21 +107,21 @@ class Shop:
         self.close_hovered = False
 
         self.shop_items = [
-            {"id": "buy_plant", "name": "Basic Plant", "cost": 10, "desc": "+1 Leaf/sec", "rate_boost": 0,
-             "cost_mult": 1.15},
-            {"id": "rate_10min", "name": "Fertilizer", "cost": 50, "desc": "+10 Leafs/min", "rate_boost": 10 / 60,
-             "cost_mult": 1.25},
-            {"id": "rate_50min", "name": "Sprinkler", "cost": 250, "desc": "+50 Leafs/min", "rate_boost": 50 / 60,
-             "cost_mult": 1.40}
+            {"id": "buy_plant", "name": "Maple Sapling", "cost": 10, "desc": "+.5 Leaf/sec", "rate_boost": 0.5,
+             "cost_mult": 1.3},
+            {"id": "rate_10min", "name": "Pine Tree", "cost": 100, "desc": "+1 Leafs/sec", "rate_boost": 1,
+             "cost_mult": 2.},
+            {"id": "rate_50min", "name": "Large Oak", "cost": 300, "desc": "+2 Leafs/sec", "rate_boost": 2,
+             "cost_mult": 2.7}
         ]
 
         self.upgrade_items = [
-            {"id": "multiplier_x2", "name": "Super-Fertilizer", "cost": 500, "desc": "Doubles Leaf Output (x2)",
-             "multiplier_value": 2.0, "cost_mult": 10.0, "purchased": False},
-            {"id": "multiplier_x3", "name": "Plant Mulch", "cost": 5000, "desc": "Triples Leaf Output (x3)",
-             "multiplier_value": 3.0, "cost_mult": 10.0, "purchased": False},
-            {"id": "multiplier_x5", "name": "Aquatic Water", "cost": 50000, "desc": "Quintuples Leaf Output (x3)",
-             "multiplier_value": 5.0, "cost_mult": 10.0, "purchased": False}
+            {"id": "rate_10min", "name": "Fertilizer", "cost": 100, "desc": "Increases leaf Output By 10%", "multiplier_value": 1.1,
+             "purchased": False},
+            {"id": "rate_50min", "name": "Sprinkler", "cost": 500, "desc": "Increases leaf Output By 25%", "multiplier_value": 1.25,
+             "purchased": False},
+            {"id": "multiplier_x2", "name": "Super-Fertilizer", "cost": 1000, "desc": "Doubles Leaf Output (x2)",
+             "multiplier_value": 2.0, "purchased": False},
         ]
 
     # FIX 1: Methods to extract and restore shop data
@@ -148,7 +148,7 @@ class Shop:
             if item["id"] in saved_upgrades:
                 item["purchased"] = saved_upgrades[item["id"]]
 
-    def toggle(self, is_upgrades=False): 
+    def toggle(self, is_upgrades=False):
         self.is_open = True
         self.is_upgrades = is_upgrades
 
