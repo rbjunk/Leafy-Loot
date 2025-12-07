@@ -28,10 +28,26 @@ class GameManager:
 
         # Assets
         self.plant_images = {}
-        self.load_plant_image("buy_plant", "plant.png")
-        self.load_plant_image("rate_10min", "fertilizer.png")
-        self.load_plant_image("rate_50min", "sprinkler.png")
+        self.load_plant_image("maple_sapling", "plant.png")
+        self.load_plant_image("oak_tree", "oak_tree.png")
+        self.load_plant_image("willow_tree", "willow_tree.png")
 
+
+        # Plant Fallback Colors (R, G, B)
+        # These are used in main.py's draw_plants if an image is not found.
+        # Note: Upgrade items like fertilizer and sprinkler are excluded as requested.
+        self.plant_colors = {
+            # Base plant (light green)
+            "buy_plant": (100, 200, 100),       # Standard light green (RGB: 100, 200, 100)
+            
+            # Shop Plants (various greens and special colors)
+            "maple_sapling": (120, 180, 120),   # Medium light green, (RGB: 120, 180, 120)
+            "oak_tree": (80, 150, 80),          # Forest green, (RGB: 80, 150, 80)
+            "willow_tree": (150, 220, 150),     # Pale green, (RGB: 150, 220, 150)
+            "ginkgo_tree": (180, 180, 80),      # Yellow-green, (RGB: 180, 180, 80)
+            "ancient_banyan": (50, 130, 50),    # Very deep, (RGB: 50, 130, 50)
+            "crystal_tree": (100, 100, 255),    # Blue/Crystal-like, (RGB: 100, 100, 255)
+        }
     @property
     def plants(self):
         return len(self.plant_grid)
@@ -189,6 +205,38 @@ class Shop:
         max_scroll = max(0, content_h - visible_h)
         return max_scroll
 
+    def get_scrollbar_info(self, width, height, scroll_offset):
+        """Return (track_rect, thumb_rect, max_scroll) for the modal scrollbar.
+        `thumb_rect` may be None if no scrolling is needed.
+        """
+        modal_w, modal_h = 700, 500
+        rect = pygame.Rect(0, 0, modal_w, modal_h)
+        rect.center = (width // 2, height // 2)
+
+        item_h = 80
+        spacing = 10
+        current_list = self.upgrade_items if self.is_upgrades else self.shop_items
+        content_h = len(current_list) * (item_h + spacing)
+
+        visible_h = modal_h - 150
+        max_scroll = max(0, content_h - visible_h)
+
+        track_rect = pygame.Rect(rect.right - 30, rect.top + 100, 12, visible_h)
+
+        if content_h <= visible_h:
+            return track_rect, None, max_scroll
+
+        # Thumb height scaled to visible/content ratio
+        thumb_h = max(20, int(visible_h * (visible_h / content_h)))
+        track_space = visible_h - thumb_h
+        if max_scroll == 0:
+            thumb_top = track_rect.top
+        else:
+            thumb_top = track_rect.top + int((scroll_offset / max_scroll) * track_space)
+
+        thumb_rect = pygame.Rect(track_rect.x, thumb_top, track_rect.width, thumb_h)
+        return track_rect, thumb_rect, max_scroll
+
     def draw(self, screen, width, height, leafs, scroll_offset=0):
         if not self.is_open: return
 
@@ -259,6 +307,15 @@ class Shop:
 
         txt_close = btn_font.render("CLOSE", True, (255, 255, 255))
         screen.blit(txt_close, txt_close.get_rect(center=self.close_rect.center))
+
+        # Draw scrollbar (track + thumb) if needed
+        track_rect, thumb_rect, max_scroll = self.get_scrollbar_info(width, height, scroll_offset)
+        if thumb_rect:
+            # Track
+            pygame.draw.rect(screen, (80, 80, 90), track_rect, border_radius=6)
+            # Thumb
+            pygame.draw.rect(screen, (160, 160, 160), thumb_rect, border_radius=6)
+            pygame.draw.rect(screen, (220, 220, 220), thumb_rect, 2, border_radius=6)
 
     def check_hover(self, pos, sound_mgr):
         if not self.is_open: return
